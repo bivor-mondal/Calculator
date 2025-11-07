@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hALF WORKING  Calculator</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px;
+      background-image: url('background.jpg');
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+    }
+    .calculator {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    #display {
+      width: 100%;
+      height: 50px;
+      font-size: 1.5rem;
+      text-align: right;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 70px);
+      gap: 10px;
+    }
+    button {
+      padding: 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #ddd; }
+    .equal { grid-column: span 2; background: #4caf50; color: #fff; }
+    .clear { background: #f44336; color: #fff; }
+    .mode-toggle { grid-column: span 5; background: #2196f3; color: #fff; }
+    .history {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 250px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .history h3 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .history-entry {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .history-entry:hover {
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <input type="text" id="display" disabled>
+    <div class="buttons">
+      <button class="clear">C</button>
+      <button>(</button>
+      <button>)</button>
+      <button>^</button>
+      <button>/</button>
+
+      <button>7</button>
+      <button>8</button>
+      <button>9</button>
+      <button>*</button>
+      <button>√</button>
+
+      <button>4</button>
+      <button>5</button>
+      <button>6</button>
+      <button>-</button>
+      <button>log</button>
+
+      <button>1</button>
+      <button>2</button>
+      <button>3</button>
+      <button>+</button>
+      <button>sin</button>
+
+      <button>0</button>
+      <button>.</button>
+      <button class="equal">=</button>
+      <button>cos</button>
+      <button>tan</button>
+
+      <button>exp</button>
+      <button>ln</button>
+      <button>π</button>
+      <button>e</button>
+      <button>!</button>
+
+      <button>asin</button>
+      <button>acos</button>
+      <button>atan</button>
+
+      <button>sinh</button>
+      <button>cosh</button>
+      <button>tanh</button>
+
+      <button class="mode-toggle">Mode: RAD</button>
+    </div>
+  </div>
+
+  <div class="history">
+    <h3>History</h3>
+    <div id="history-list"></div>
+  </div>
+
+  <script>
+    const display = document.getElementById("display");
+    const buttons = document.querySelectorAll("button");
+    const modeToggle = document.querySelector(".mode-toggle");
+    const historyList = document.getElementById("history-list");
+
+    let isDegree = false;
+
+    function factorial(n) {
+      if (n < 0) return NaN;
+      if (n === 0 || n === 1) return 1;
+      let res = 1;
+      for (let i = 2; i <= n; i++) res *= i;
+      return res;
+    }
+
+    function toRadians(angle) {
+      return angle * (Math.PI / 180);
+    }
+
+    function toDegrees(angle) {
+      return angle * (180 / Math.PI);
+    }
+
+    function evaluateExpression(expr) {
+      expr = expr.replace(/√/g, "Math.sqrt");
+      expr = expr.replace(/\^/g, "**");
+      expr = expr.replace(/log/g, "Math.log10");
+      expr = expr.replace(/ln/g, "Math.log");
+      expr = expr.replace(/exp/g, "Math.exp");
+      expr = expr.replace(/π/g, "Math.PI");
+      expr = expr.replace(/e/g, "Math.E");
+
+      if (isDegree) {
+        expr = expr.replace(/sin\(([^)]+)\)/g, (m, g) => `Math.sin(toRadians(${g}))`);
+        expr = expr.replace(/cos\(([^)]+)\)/g, (m, g) => `Math.cos(toRadians(${g}))`);
+        expr = expr.replace(/tan\(([^)]+)\)/g, (m, g) => `Math.tan(toRadians(${g}))`);
+
+        expr = expr.replace(/asin\(([^)]+)\)/g, (m, g) => `toDegrees(Math.asin(${g}))`);
+        expr = expr.replace(/acos\(([^)]+)\)/g, (m, g) => `toDegrees(Math.acos(${g}))`);
+        expr = expr.replace(/atan\(([^)]+)\)/g, (m, g) => `toDegrees(Math.atan(${g}))`);
+      } else {
+        expr = expr.replace(/sin/g, "Math.sin");
+        expr = expr.replace(/cos/g, "Math.cos");
+        expr = expr.replace(/tan/g, "Math.tan");
+        expr = expr.replace(/asin/g, "Math.asin");
+        expr = expr.replace(/acos/g, "Math.acos");
+        expr = expr.replace(/atan/g, "Math.atan");
+      }
+
+      expr = expr.replace(/sinh/g, "Math.sinh");
+      expr = expr.replace(/cosh/g, "Math.cosh");
+      expr = expr.replace(/tanh/g, "Math.tanh");
+
+      if (expr.includes("!")) {
+        expr = expr.replace(/(\d+)!/g, (match, num) => `factorial(${num})`);
+      }
+
+      try {
+        return eval(expr);
+      } catch {
+        return "Invalid Input";
+      }
+    }
+
+    function addToHistory(expression, result) {
+      const entry = document.createElement("div");
+      entry.className = "history-entry";
+      entry.textContent = `${expression} = ${result}`;
+      entry.addEventListener("click", () => {
+        display.value = result;
+      });
+      historyList.prepend(entry);
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const val = btn.textContent;
+        if (val === "C") {
+          display.value = "";
+        } else if (val === "=") {
+          const expression = display.value;
+          const result = evaluateExpression(expression);
+          display.value = result;
+          if (result !== "Invalid Input") {
+            addToHistory(expression, result);
+          }
+        } else if (val.startsWith("Mode")) {
+          isDegree = !isDegree;
+          modeToggle.textContent = isDegree ? "Mode: DEG" : "Mode: RAD";
+        } else {
+          display.value += val;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
